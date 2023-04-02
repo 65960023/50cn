@@ -1,0 +1,132 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Drawing.Drawing2D;
+
+namespace GDI
+{
+    public partial class Form1 : Form
+    {
+        private Bitmap OriginImage;
+        private Point MouseDownPoint;
+        private Point MouseMovePoint;
+        private Point MouseUpPoint;
+        private bool StartDraw;
+        private Rectangle CaptureRectangle;
+
+        public Form1()
+        {
+            InitializeComponent();
+            MouseDownPoint = new Point(0, 0);
+            MouseMovePoint = new Point(0, 0);
+            MouseUpPoint = new Point(0, 0);
+            StartDraw = false;
+        }
+
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            LoadImage("images/nutsandbolts.bmp");
+
+            SetDoubleBuffering();
+        }
+
+
+        /// <summary>
+        /// 加载图像
+        /// </summary>
+        /// <param name="ImagePath"></param>
+        private void LoadImage(string ImagePath)
+        {
+            OriginImage = new Bitmap(ImagePath);
+            pictureBox1.Image = OriginImage;
+        }
+
+        /// <summary>
+        /// 设置双缓存,防止图片闪烁
+        /// </summary>
+        private void SetDoubleBuffering()
+        {
+            this.SetStyle(ControlStyles.ResizeRedraw, true);
+            this.SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
+            this.SetStyle(ControlStyles.AllPaintingInWmPaint, true);
+            this.SetStyle(ControlStyles.UserPaint, true);
+            this.SetStyle(ControlStyles.SupportsTransparentBackColor, true);
+            this.UpdateStyles();
+        }
+
+        private void OnMouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                StartDraw = true;
+                MouseDownPoint = new Point(e.X, e.Y);
+            }
+        }
+
+        private void OnMouseMove(object sender, MouseEventArgs e)
+        {
+            MouseMovePoint = e.Location;
+            if (StartDraw)
+            {
+                CaptureRectangle.X = MouseDownPoint.X - MouseMovePoint.X < 0 ? MouseDownPoint.X : MouseMovePoint.X;
+                CaptureRectangle.Width = Math.Abs(MouseDownPoint.X - MouseMovePoint.X);
+
+                CaptureRectangle.Y = MouseDownPoint.Y - MouseMovePoint.Y < 0 ? MouseDownPoint.Y : MouseMovePoint.Y;
+                CaptureRectangle.Height = Math.Abs(MouseDownPoint.Y - MouseMovePoint.Y);
+
+                pictureBox1.Invalidate();
+            }
+        }
+
+        private void OnMouseUp(object sender, MouseEventArgs e)
+        {
+            StartDraw = false;
+        }
+
+        private void OnPaint(object sender, PaintEventArgs e)
+        {
+            if (StartDraw)
+            {
+                Pen p = new Pen(Color.YellowGreen, 1);
+                p.DashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
+                e.Graphics.DrawRectangle(p, CaptureRectangle);
+            }
+
+        }
+
+        //创建绘图对象的3种方法：
+        //1：在窗体或控件的Panit事件中创建，用于窗体或控件的重绘
+        private void Form1_Paint_1(object sender, PaintEventArgs e)
+        {
+            //Graphics g1= e.Graphics;
+            //Pen p = new Pen(Color.Red,2);
+            //Point p2 = new Point(20, 20);
+            //Point p3 = new Point(20, 200);
+            ////g1.DrawLine(p, p2, p3);
+            //g1.DrawRectangle(p, 50, 50, 100, 50);
+
+            ////释放
+            //p.Dispose();
+            //g1.Dispose();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            //2：为控件创建绘图对象
+            Graphics g2 = pictureBox1.CreateGraphics();
+            //3：基于图片去绘制
+            Graphics g=Graphics.FromImage(Image.FromFile("images/nutsandbolts.bmp"));
+            //呈现质量，消除锯齿
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+        }
+
+    }
+}
+             
